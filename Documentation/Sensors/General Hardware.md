@@ -1,22 +1,30 @@
 
 ---
+# Microcontroladores usados no sistema:
+
+![[Pasted image 20261113075645.png|479]]
+
+
+
+---
 # Sensor BMP280
 
-É o **componente físico** (o chip). Ele mede temperatura e pressão atmosférica. Para conversar com a placa (Raspberry Pi), ele usa um protocolo de comunicação serial por fios chamado **I2C**.
+É o **componente físico** (o chip). Ele mede temperatura e pressão atmosférica. 
 
 | ![[Pasted image 20260908154712.png\|130]] | ![[Pasted image 20260908154726.png\|126]] |
 | ----------------------------------------- | ----------------------------------------- |
 
-## (Barramento I2C)
+## (Barramento SPI)
 
-| **Pino no Módulo** | **Função**              | **Onde conectar (Arduino Mega)** | **Explicação da Conexão**                                                                              |
-| ------------------ | ----------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| **VCC**            | Alimentação Positiva    | **3.3V**                         | Alimenta o chip BMP280 com tensão lógica segura de 3,3V.                                               |
-| **GND**            | Terra (0V)              | **GND**                          | Referência negativa da alimentação elétrica.                                                           |
-| **SDA / SDI**      | Dados Seriais (I2C)     | **Pino 20 (SDA)**                | Transporta os dados de temperatura e pressão atmosférica pelo pino I2C dedicado do Arduino Mega.       |
-| **SCL / SCK**      | Clock Serial (I2C)      | **Pino 21 (SCL)**                | Sincroniza a comunicação I2C usando o pino de clock dedicado do Arduino Mega.                          |
-| **CSB**            | Chip Select             | **3.3V**                         | Precisa ser mantido em nível lógico ALTO para ativar o protocolo I2C e desativar o modo SPI.           |
-| **SDO**            | Seletor de Endereço I2C | **GND**                          | Define o endereço de comunicação do sensor no barramento I2C; ligado ao GND fixa o endereço em `0x76`. |
+|**Pino no Módulo BMP280**|**Pino no Arduino Mega (Número)**|**Onde achar na placa (fora dos círculos)**|
+|---|---|---|
+|**CSB** (ou `CS`)|**Pino Digital 24**|Barra lateral direita: **2º furo da coluna esquerda**|
+|**SCL** (ou `SCK`)|**Pino Digital 26**|Barra lateral direita: **3º furo da coluna esquerda**|
+|**SDA** (ou `SDI` / `MOSI`)|**Pino Digital 28**|Barra lateral direita: **4º furo da coluna esquerda**|
+|**SDO** (ou `MISO`)|**Pino Digital 30**|Barra lateral direita: **5º furo da coluna esquerda**|
+|**VCC**|**3.3V** _(dividido com o RFID)_|Barra `POWER` embaixo: **3º furo** (após `IOREF` e `RESET`)|
+|**GND**|**GND** _(ao lado do pino 13)_|Régua superior: **1º furo à esquerda do pino 13**|
+
 _**atenção:** Como este módulo possui 6 pinos para suportar tanto I2C quanto SPI, os pinos `CSB` e `SDO` precisam ser polarizados para travar o sensor no modo **I2C** nos pinos dedicados do Mega.
 
 ---
@@ -28,17 +36,16 @@ Esse componente é um **Módulo Leitor e Gravador RFID**, modelo **[RFID-RC522](
 
 ## (Barramento SPI)
 
-| **Pino no Módulo** | **Função**           | **Onde conectar (Arduino Mega)** | **Explicação da Conexão**                                                                                        |
-| ------------------ | -------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| **3.3V**           | Alimentação Positiva | **3.3V**                         | Fornece energia para o circuito funcionar (não deve ser ligado em 5V).                                           |
-| **GND**            | Terra (0V)           | **GND**                          | Referência negativa da alimentação elétrica.                                                                     |
-| **SDA**            | Slave Select (SS)    | **Pino Digital 53**              | Ativa ou desativa a comunicação com o leitor no barramento SPI; o pino 53 é o SS nativo do Mega.                 |
-| **SCK**            | Serial Clock         | **Pino Digital 52**              | Sincroniza a transmissão de dados enviando pulsos de clock pelo barramento SPI de hardware.                      |
-| **MOSI**           | Master Out Slave In  | **Pino Digital 51**              | Envia comandos e dados do Arduino Mega (Mestre) para o leitor RFID (Escravo).                                    |
-| **MISO**           | Master In Slave Out  | **Pino Digital 50**              | Envia os dados lidos da tag/cartão RFID de volta para o Arduino Mega.                                            |
-| **RST**            | Reset                | **Pino Digital 49**              | Reinicia o módulo ou o coloca em modo de economia de energia, posicionado fisicamente ao lado do barramento SPI. |
-| **IRQ**            | Interrupt Request    | **Não conectar**                 | Avisa quando um cartão entra no campo de leitura, mas é mantido desconectado na operação padrão.                 |
-_**atenção:** O leitor RFID utiliza o protocolo  SPI. No Arduino Mega, os pinos físicos desse barramento ficam na fileira dupla traseira (pinos 50 a 53), liberando os pinos digitais frontais.
+| **Pino no Módulo RFID** | **Onde ligar no Arduino Mega** |
+| ----------------------- | ------------------------------ |
+| **SDA (SS)**            | **Pino Digital 9**             |
+| **SCK**                 | **Pino Digital 5**             |
+| **MOSI**                | **Pino Digital 6**             |
+| **MISO**                | **Pino Digital 7**             |
+| **RST**                 | **Pino Digital 8**             |
+| **IRQ**                 | **Não conectar**               |
+| **3.3V**                | **3.3V (Compartilhado)**       |
+| **GND**                 | **GND livre**                  |
 
 ---
 # Módulo DHT22
@@ -49,11 +56,11 @@ _**atenção:** O leitor RFID utiliza o protocolo  SPI. No Arduino Mega, os pino
 
 ## (Pino Digital)
 
-|**Pino no Módulo**|**Função**|**Onde conectar (Arduino Mega)**|**Explicação da Conexão**|
-|---|---|---|---|
-|**VCC**|Alimentação Positiva|**5V**|Fornece energia para o circuito interno do sensor funcionar, aceitando de 3,3V a 5V.|
-|**GND**|Terra (0V)|**GND**|Referência negativa da alimentação elétrica.|
-|**DAT**|Dados Digitais|**Pino Digital 2**|Transmite os sinais digitais com os valores de temperatura e umidade relativa do ar lidos pelo sensor.|
+| **Pino no Módulo** | **Função**           | **Onde conectar (Arduino Mega)** | **Explicação da Conexão**                                                                              |
+| ------------------ | -------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| **VCC**            | Alimentação Positiva | **5V**                           | Fornece energia para o circuito interno do sensor funcionar, aceitando de 3,3V a 5V.                   |
+| **GND**            | Terra (0V)           | **GND**                          | Referência negativa da alimentação elétrica.                                                           |
+| **DAT**            | Dados Digitais       | **Pino Digital 2**               | Transmite os sinais digitais com os valores de temperatura e umidade relativa do ar lidos pelo sensor. |
 _**atenção:** O DHT22 transmite seus dados em formato digital por um único fio, sendo alocado no início da régua de comunicação digital do Mega.
 
 ---
@@ -65,12 +72,18 @@ _**atenção:** O DHT22 transmite seus dados em formato digital por um único fi
 
 ## (Barramento UART / Serial1)
 
-|**Pino no Módulo**|**Função**|**Onde conectar (Arduino Mega)**|**Explicação da Conexão**|
-|---|---|---|---|
-|**VCC**|Alimentação Positiva|**5V**|Fornece energia ao módulo, que aceita de 3,3V a 5V graças ao regulador de tensão interno.|
-|**GND**|Terra (0V)|**GND**|Referência negativa da alimentação elétrica.|
-|**TX**|Transmissão Serial|**Pino 19 (RX1)**|Envia os dados de localização (protocolo NMEA) do GPS para o microcontrolador, exigindo ligação cruzada com o pino de recepção (RX) da placa.|
-|**RX**|Recepção Serial|**Pino 18 (TX1)**|Recebe comandos e configurações enviados pelo microcontrolador, exigindo ligação cruzada com o pino de transmissão (TX) da placa.|
+| **Pino no Módulo** | **Função**           | **Onde conectar (Arduino Mega)** | **Explicação da Conexão**                                                                                                                     |
+| ------------------ | -------------------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| **VCC**            | Alimentação Positiva | **5V**                           | Fornece energia ao módulo, que aceita de 3,3V a 5V graças ao regulador de tensão interno.                                                     |
+| **GND**            | Terra (0V)           | **GND**                          | Referência negativa da alimentação elétrica.                                                                                                  |
+| **TX**             | Transmissão Serial   | **Pino 19 (RX1)**                | Envia os dados de localização (protocolo NMEA) do GPS para o microcontrolador, exigindo ligação cruzada com o pino de recepção (RX) da placa. |
+| **RX**             | Recepção Serial      | **Pino 18 (TX1)**                | Recebe comandos e configurações enviados pelo microcontrolador, exigindo ligação cruzada com o pino de transmissão (TX) da placa.             |
 _**atenção:** O GPS utiliza comunicação serial e deve ser ligado à porta **Serial1** dedicada do Arduino Mega para não disputar processamento com os outros sensores
 
 ---
+|Sensor|Pinos no Mega|
+|
+|GPS|Serial1 (19 e 18), 9600 baud|
+|DHT22|2|
+|BMP280|CS 24, SCK 26, MOSI 28, MISO 30|
+|RFID|SS 9, SCK 5, MOSI 6, MISO 7, RST 8|

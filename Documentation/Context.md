@@ -35,16 +35,22 @@ O sistema vai ser integrado da seguinte forma, teremos um arquivo para definir a
 # Schema json
 
 ```json
-GpsDriver{
-  "gps": {
-    "valido": true,
-    "lat": -23.550520,
-    "lng": -46.633308,
-    "alt": 760.5,
-    "vel": 42.3,
-    "sats": 8
-  }
-}
+"gps": {
+	"fix": true,
+	"lat": -7.230712,
+	"lon": -35.881124,
+	"alt_m": 552.4,
+	"speed_kmh": 3.06,
+	"satellites": 8
+	}
+  
+"env": {
+	"temp_dht_c": 27.4,
+	"humidity_pct": 62.0,
+	"temp_bmp_c": 27.1,
+	"pressure_hpa": 951.8,
+	"engate_rfid": 'reboque'
+	}
 ```
 
 ---
@@ -57,5 +63,45 @@ GpsDriver{
 | **RFID (MFRC522)**  | SPI              | **50 (MISO)**, **51 (MOSI)**, **52 (SCK)**<br><br>  <br><br>+ **53 (SDA/CS)** e **49 (RST)** | Os pinos 50-52 são fixos do barramento SPI. O CS e o RST você escolhe (53 e 49 são o padrão).                                                          |
 | **DHT22**           | Digital (1-Wire) | **Pino 2** (ou qualquer digital livre)                                                       | Usa apenas 1 pino de dados comum.                                                                                                                      |
 | **Rede (MQTT)**     | SPI ou UART      | _Depende do módulo_                                                                          | Se usar **Ethernet Shield**, ele encaixa direto em cima do Mega (usa SPI + pino 10). Se usar **ESP8266 / ESP-01**, vai na **Serial2 (pinos 16 e 17)**. |
+
+---
+# Comunicação - MQTT
+
+O sistema deve contar com o protocolo de comunicação mqtt. Como broker teremos o sistema de dasboard web que vai receber os dados de um aquivo Fusion, responsável pela junção dos valores coletados nos sensores e os transformar num json para serem enviados ao broker, que lá desempacota e expõe dos dados na tela.
+
+**(Fusion.c) ──> (Main_mqtt.c)**
+```json
+[ Sensores (JSON) ] ──(Serial)──> [ Fusion ] ──> [ TractorMqtt ] ──> [ Broker MQTT ]
+```
+
+---
+# Dashboard 
+
+A apresentação dos dados coletados nos sensores conectados ao trator serão destinados a uma dashboard num sistema web. O design é bem simples, mostrando o tipo de engate conectado ao trator, o status da conexão, se ta online (recebendo os json direitinho) ou offline (perdeu conexão ou parou de receber json pra atualiza), deve expor os dados de temperatura, pressão, umidade, velocidade,elevação, coordenadas e um mapa de verdade funcional que mostra onde o trator está localizado, igual o sistema do maps que mostra um indicador de onde eu estou, quero algo parecido.
+
+**exemplo base de design para página web**
+![[Pasted image 20261115191558.png|353]]
+
+---
+# Libs usadas
+
+- **MFRC522** - RFID RC522
+- **TinyGPSplus** - GPS
+- **DTHSensorLibrary** - DHT22
+-  **Adafruit_BMP280** - BMP280
+-  **Adafruit Unified Sensor** - dependência necessária para os sensores da Adafruit funcionarem
+-  **ArduinoJson** - para criar e ler dados no formato JSON
+
+---
+# Main e seu fluxo de execução
+
+```txt
+loop() infinito:
+ ├── 1. Motion_Loop()        -> Roda o tempo todo (controle contínuo dos motores/encoders)
+ ├── 2. TractorMqtt_Loop()   -> Roda o tempo todo (mantém conexão e reconecta se cair)
+ ├── 3. GpsDriver_Update()   -> Roda o tempo todo (esvazia a Serial do GPS sem perder bytes)
+ ├── 4. Rfid_Task()          -> A cada 100 ms (lê tag MFRC522 e envia evento imediato)
+ └── 5. Telemetry_Task()     -> A cada 2000 ms (lê DHT + BMP + GPS e envia telemetria)
+```
 
 ---
