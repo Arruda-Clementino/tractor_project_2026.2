@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": "../../../.."
+		},
+		{
+			"name": "fagner",
+			"path": "../../../../../../Documentos/PlatformIO/Projects/fagner"
+		}
+	],
+    "settings": {}
+}
